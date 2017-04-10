@@ -8,6 +8,7 @@ class ByteTests: XCTestCase {
         ("testIsCases", testIsCases),
         ("testPatternMatching", testPatternMatching),
         ("testBase64", testBase64),
+        ("testBase64URL", testBase64URL),
     ]
 
     func testRandom() {
@@ -62,9 +63,100 @@ class ByteTests: XCTestCase {
     }
 
     public func testBase64() {
-        XCTAssertEqual("dmFwb3I=".makeBytes().base64Decoded.string, "vapor")
-        XCTAssertEqual("⚠️".makeBytes().base64Decoded.string, "")
-        XCTAssertEqual("hello".makeBytes().base64Encoded.string, "aGVsbG8=")
-        XCTAssertEqual("hello".makeBytes().base64Encoded, "aGVsbG8=".makeBytes())
+        XCTAssertEqual(
+            "dmFwb3I="
+                .makeBytes()
+                .base64Decoded
+                .makeString(),
+            "vapor"
+        )
+        XCTAssertEqual(
+            "⚠️"
+                .makeBytes()
+                .base64Decoded
+                .makeString(),
+            ""
+        )
+        XCTAssertEqual(
+            "hello"
+                .makeBytes()
+                .base64Encoded
+                .makeString(),
+            "aGVsbG8="
+        )
+
+        XCTAssert(
+            "eyJleHAiOjE0ODkxNTA1NjIuMjgyODMsInVzZXIiOnsiaWQiOiI3MUUxQjUzQy1BMDZBLTRFMzUtQTBDQy0yQ0UzMUEzQkQ5MDciLCJuYW1lIjoiSm9uYXMgU2Nod2FydHoifX0="
+                .makeBytes()
+                .base64Decoded
+                .last
+            != Byte.max
+        )
+    }
+
+    public func testBase64URL() {
+        XCTAssertEqual(
+            "dmFwb3I="
+                .makeBytes()
+                .base64URLDecoded
+                .makeString(),
+            "vapor"
+        )
+        XCTAssertEqual(
+            "⚠️"
+                .makeBytes()
+                .base64URLDecoded
+                .makeString(),
+            ""
+        )
+        XCTAssertEqual(
+            "hello"
+                .makeBytes()
+                .base64URLEncoded
+                .makeString(),
+            "aGVsbG8"
+        )
+        XCTAssertEqual(
+            "+/+/"
+                .makeBytes()
+                .base64Decoded
+                .base64URLEncoded
+                .makeString(),
+            "-_-_"
+        )
+    }
+
+    public func testHexEncode() {
+        XCTAssertEqual(
+            "vapor"
+                .makeBytes()
+                .hexEncoded
+                .makeString(),
+            "7661706f72"
+        )
+        XCTAssertEqual(
+            "vapor"
+                .makeBytes()
+                .hexEncoded
+                .hexDecoded
+                .makeString(),
+            "vapor"
+        )
+    }
+
+    public func testHexCustom() {
+        let encoder = HexEncoder(ignoreUndecodableCharacters: false)
+        XCTAssertEqual(
+            encoder.decode(
+                "61616X6161".makeBytes()
+            ).makeString(),
+            "aa"
+        )
+    }
+    
+    public func testBase64URLDecodeJWT() {
+        let jwt = "Aw_Ma0impeGEaCQn6AramTZ6hXeW0bJm_3dKbiXtJDOBhs1Zm6IgX-uJhuzW0SY2evWL4D2ZX5I90ISAzEdabw".makeBytes()
+        let decoded = jwt.base64URLDecoded
+        XCTAssertEqual(decoded.count, 64)
     }
 }
